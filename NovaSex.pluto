@@ -1,5 +1,8 @@
 --version 1.0.0
 
+util.require_natives("2944b", "g")
+local root = menu.my_root()
+
 local updaterTable = {
     lastCheckTime = nil,
     dayInMilis = 86400000,
@@ -136,9 +139,6 @@ root:action("Search For Update", {}, "Forces to look if a update is available", 
     local lastcheckTimePath = filePathsTable[3]
     updateFiles(lastcheckTimePath, true)
 end)
-
-
-util.require_natives("2944b", "g")
 
 --TABLES--
 local allPedsList = {
@@ -1382,7 +1382,6 @@ local function getClosestPed()
 end
 
 --LISTS--
-local root = menu.my_root()
 local EscortServicesList = root:list("Escort Services")
 local pedEscortList = root:list("Ped Escort")
 local animationsList = root:list("Animations")
