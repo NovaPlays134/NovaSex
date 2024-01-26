@@ -1,4 +1,4 @@
---version 1.0.0
+--version 1.0.1
 
 util.require_natives("2944b", "g")
 local root = menu.my_root()
@@ -6,7 +6,7 @@ local root = menu.my_root()
 local updaterTable = {
     lastCheckTime = nil,
     dayInMilis = 86400000,
-    scriptVersion = "1.0.0",
+    scriptVersion = "1.0.1",
     newVersion = nil,
 }
 
