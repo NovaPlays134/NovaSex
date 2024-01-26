@@ -8,7 +8,7 @@ A script made for the mod menu Stand, here u you can do lots of naughty things ð
 - Auto Updater -> This script has a buildin auto updater that checks every day if the script has a update, you can also search for a update if you don't want to wait.
 
 # Installation
-Download the NovaSex.pluto file and put it in the Lua Scripts folder
+Download the NovaSex.pluto file and put it in the Lua Scripts folder.
 
 
 # Big Thanks
