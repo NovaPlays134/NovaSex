@@ -1,12 +1,14 @@
---version 1.0.1
-
+--version 1.0.2 
 util.require_natives("2944b", "g")
+
+
+--AUTO UPDATER--
 local root = menu.my_root()
 
 local updaterTable = {
     lastCheckTime = nil,
     dayInMilis = 86400000,
-    scriptVersion = "1.0.1",
+    scriptVersion = "1.0.2",
     newVersion = nil,
 }
 
@@ -139,6 +141,9 @@ root:action("Search For Update", {}, "Forces to look if a update is available", 
     local lastcheckTimePath = filePathsTable[3]
     updateFiles(lastcheckTimePath, true)
 end)
+--
+
+
 
 --TABLES--
 local allPedsList = {
@@ -1157,20 +1162,21 @@ local pedClasses = {
     dlc = "DLC",
 }
 
-
 local data = {
     pedHookerHash = "a_f_m_beach_01",
     customHookerEntity = nil,
     pedEscortHash = "a_f_m_beach_01",
     pedEscortEntity = nil,
-    pedRapeHash = "a_f_m_beach_01",
-    pedRapeEntity = nil,
+    pedSceneHash = "a_f_m_beach_01",
+    pedSceneEntity = nil,
     isFocusedOnPed = false,
     createdPeds = {},
     createdPed = nil,
     previewPedRot = 0,
     closestPed = nil,
 }
+--
+
 
 
 --FUNCTIONS--
@@ -1200,7 +1206,7 @@ function previewPed(ped, create)
 end
 
 local function makeAllPedsList(root, callback)
-    local generalList = root:list("Selected Ped: Beach Bikini")
+    local generalList = root:list("Select A Ped: Default Selected")
     local classes = {}
     local classLists = {}
 
@@ -1215,7 +1221,7 @@ local function makeAllPedsList(root, callback)
     for class, i in allPedsList do
         for k, ped in allPedsList[class] do
             local action = classLists[class]:action(ped.name, {}, ped.model, function()
-                menu.set_menu_name(generalList, "Ped" .. ": " .. ped.name)
+                menu.set_menu_name(generalList, "Selected Ped" .. ": " .. ped.name)
                 generalList:focus()
                 callback(ped.model)
             end)
@@ -1380,12 +1386,21 @@ local function getClosestPed()
         return closestPed
     end
 end
+--
+
+
 
 --LISTS--
+root:divider("")
 local EscortServicesList = root:list("Escort Services")
 local pedEscortList = root:list("Ped Escort")
-local animationsList = root:list("Animations")
-local rapeList = root:list("Rape")
+
+
+local scenarioList = root:list("Sexy Scenarios")
+local animationsList = root:list("Sexy Animations")
+--
+
+
 
 --ESCORT SERVICES--
 makeAllPedsList(EscortServicesList, function(ped)
@@ -1405,11 +1420,16 @@ end)
 EscortServicesList:action("Delete Escort", {}, "", function()
     entities.delete_by_handle(data.pedHookerEntity)
 end)
+--
+
+
 
 --PED ESCORT--
 makeAllPedsList(pedEscortList, function(ped)
     data.pedEscortHash = ped
 end)
+
+pedEscortList:divider("")
 
 pedEscortList:action("Spawn Ped", {}, "", function()
     spawnPedEscort(data.pedEscortHash, false)
@@ -1423,6 +1443,8 @@ pedEscortList:action("Delete Ped", {}, "", function()
     entities.delete_by_handle(data.pedEscortEntity)
 end)
 
+pedEscortList:divider("")
+
 pedEscortList:action("Get Some Head!", {}, "", function()
     playAnimationOnPed("mini@prostitutes@sexlow_veh", "low_car_bj_loop_female")
 end)
@@ -1434,191 +1456,392 @@ end)
 pedEscortList:action("Stop Animation", {}, "", function()
     stopAnimation()
 end)
+--
 
---ANIMATIONS--
-animationsList:action("Force Stop Animations", {}, "", function()
-    CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
+
+
+--SCENARIO--
+makeAllPedsList(scenarioList, function(ped)
+    data.pedSceneHash = ped
+end)
+scenarioList:divider("")
+--
+
+
+
+--SEXY HUG--
+local hugList = scenarioList:list("Sexy Hug")
+
+hugList:toggle("Female Sexy Hug - Selected Ped", {}, "", function(on)
+    if on then
+        local offsetPos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(players.user_ped(), 0, 0.55, 0)
+        local pedHash = util.joaat(data.pedSceneHash)
+        util.request_model(pedHash)
+        data.pedSceneEntity = entities.create_ped(1, pedHash, offsetPos1, 0)
+        util.yield(1000)
+
+        SET_ENTITY_HEADING(data.pedSceneEntity, GET_ENTITY_HEADING(players.user_ped()) - 180)
+        SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.pedSceneEntity, false)
+        FREEZE_ENTITY_POSITION(data.pedSceneEntity, true)
+        TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedSceneEntity, true)
+        SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedSceneEntity, true)
+
+        loadAnimDict("misscarsteal2chad_goodbye")
+        TASK_PLAY_ANIM(data.pedSceneEntity, "misscarsteal2chad_goodbye", "chad_armsaround_chad", 1.0, 0, -1, 9, 0, false, false, false)
+
+		local offsetPos2 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.pedSceneEntity, 0.05, 0.55, 0)
+		SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos2.x , offsetPos2.y, offsetPos2.z, false, false, false)
+
+        loadAnimDict("misscarsteal2chad_goodbye")
+		TASK_PLAY_ANIM(players.user_ped(), "misscarsteal2chad_goodbye", "chad_armsaround_girl", 1, 0, -1, 9, 0, false, false, false)
+
+		local time = util.current_time_millis() + 20000
+		while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.pedSceneEntity) do
+            if IS_ENTITY_PLAYING_ANIM(data.pedSceneEntity, "misscarsteal2chad_goodbye", "chad_armsaround_chad", 3) then
+				if math.random(1, 100) == 1 then
+					PLAY_STREAM_FROM_PED(data.pedSceneEntity, math.random(6, 7), 0, 0)
+				end
+			end
+			util.yield()
+        end
+    else
+        if data.pedSceneEntity then
+            entities.delete_by_handle(data.pedSceneEntity)
+		end
+        CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
+	end
 end)
 
-animationsList:action("Stop Animation", {}, "", function()
-    CLEAR_PED_TASKS(players.user_ped())
-    CLEAR_PED_SECONDARY_TASK(players.user_ped())
+hugList:toggle("Female Sexy Hug - Closest Ped", {}, "", function(on)
+    if on then
+        data.closestPed = getClosestPed()
+		if data.closestPed then
+            SET_ENTITY_HEADING(data.closestPed, GET_ENTITY_HEADING(players.user_ped()) - 180)
+            SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.closestPed, false)
+            FREEZE_ENTITY_POSITION(data.closestPed, true)
+            TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.closestPed, true)
+            SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.closestPed, true)
+
+            loadAnimDict("misscarsteal2chad_goodbye")
+            TASK_PLAY_ANIM(data.closestPed, "misscarsteal2chad_goodbye", "chad_armsaround_chad", 1.0, 0, -1, 9, 0, false, false, false)
+
+			local offsetPos = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.closestPed, 0.05, 0.55, 0)
+			SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos.x , offsetPos.y, offsetPos.z, false, false, false)
+
+            loadAnimDict("misscarsteal2chad_goodbye")
+			TASK_PLAY_ANIM(players.user_ped(), "misscarsteal2chad_goodbye", "chad_armsaround_girl", 1, 0, -1, 9, 0, false, false, false)
+
+			local time = util.current_time_millis() + 20000
+			while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.closestPed) do
+                if IS_ENTITY_PLAYING_ANIM(data.closestPed, "misscarsteal2chad_goodbye", "chad_armsaround_chad", 3) then
+					if math.random(1, 100) == 1 then
+						PLAY_STREAM_FROM_PED(data.closestPed, math.random(6, 7), 0, 0)
+					end
+				end
+				util.yield()
+			end
+        end
+    else
+        if data.closestPed then
+			FREEZE_ENTITY_POSITION(data.closestPed, false)
+			STOP_ANIM_TASK(data.closestPed, "misscarsteal2chad_goodbye", "chad_armsaround_chad", 1.0)
+			CLEAR_PED_TASKS(data.closestPed)
+			CLEAR_PED_SECONDARY_TASK(data.closestPed)
+		end
+        CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
+	end
 end)
 
-animationsList:divider("")
+hugList:toggle("Male Sexy Hug - Selected Ped", {}, "", function(on)
+    if on then
+        local offsetPos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(players.user_ped(), -0.05, 0.65, 0)    
 
-local sexyActionsList = animationsList:list("Sexy Actions")
-sexyActionsList:action("Send a Kiss", {}, "", function(on_click)
-    playAnimation("mini@hookers_spvanilla", "idle_a", -1)
+		local pedHash = util.joaat(data.pedSceneHash)
+        util.request_model(pedHash)
+        data.pedSceneEntity = entities.create_ped(1, pedHash, offsetPos1, 0)
+        util.yield(1000)
+		
+        SET_ENTITY_HEADING(data.pedSceneEntity, GET_ENTITY_HEADING(players.user_ped()) - 180)
+		SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.pedSceneEntity, false)
+        FREEZE_ENTITY_POSITION(data.pedSceneEntity, true)
+     	TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedSceneEntity, true)
+        SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedSceneEntity, true)
+	
+	    loadAnimDict("misscarsteal2chad_goodbye")
+        TASK_PLAY_ANIM(data.pedSceneEntity, "misscarsteal2chad_goodbye", "chad_armsaround_girl", 1.0, 0, -1, 9, 0, false, false, false)
+
+		local offsetPos2 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.pedSceneEntity, -0.05, 0.65, 0)
+		SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos2.x , offsetPos2.y, offsetPos2.z, false, false, false)
+
+        loadAnimDict("misscarsteal2chad_goodbye")
+		TASK_PLAY_ANIM(players.user_ped(), "misscarsteal2chad_goodbye", "chad_armsaround_chad", 1, 0, -1, 9, 0, false, false, false)
+
+		local time = util.current_time_millis() + 20000
+		while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.pedSceneEntity) do
+            if IS_ENTITY_PLAYING_ANIM(data.pedSceneEntity, "misscarsteal2chad_goodbye", "chad_armsaround_girl", 3) then
+				if math.random(1, 100) == 1 then
+					PLAY_STREAM_FROM_PED(data.pedSceneEntity, math.random(6, 7), 0, 0)
+				end
+			end
+			util.yield()
+        end
+    else
+        if data.pedSceneEntity then
+            entities.delete_by_handle(data.pedSceneEntity)
+		end
+        CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
+	end
 end)
 
-sexyActionsList:action("Sexy Idle", {}, "", function(on_click)
-    playAnimation("move_f@sexy@a", "idle", -1)
+hugList:toggle("Male Sexy Hug - Closest Ped", {}, "", function(on)
+    if on then
+        data.closestPed = getClosestPed()
+		if data.closestPed then
+            SET_ENTITY_HEADING(data.closestPed, GET_ENTITY_HEADING(players.user_ped()) - 180)
+            SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.closestPed, false)
+            FREEZE_ENTITY_POSITION(data.closestPed, true)
+            TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.closestPed, true)
+            SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.closestPed, true)
+
+            loadAnimDict("misscarsteal2chad_goodbye")
+            TASK_PLAY_ANIM(data.closestPed, "misscarsteal2chad_goodbye", "chad_armsaround_girl", 1.0, 0, -1, 9, 0, false, false, false)
+
+			local offsetPos = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.closestPed, -0.05, 0.65, 0)
+			SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos.x , offsetPos.y, offsetPos.z, false, false, false)
+
+            loadAnimDict("misscarsteal2chad_goodbye")
+			TASK_PLAY_ANIM(players.user_ped(), "misscarsteal2chad_goodbye", "chad_armsaround_chad", 1, 0, -1, 9, 0, false, false, false)
+
+			local time = util.current_time_millis() + 20000
+			while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.closestPed) do
+                if IS_ENTITY_PLAYING_ANIM(data.closestPed, "misscarsteal2chad_goodbye", "chad_armsaround_girl", 3) then
+					if math.random(1, 100) == 1 then
+						PLAY_STREAM_FROM_PED(data.closestPed, math.random(6, 7), 0, 0)
+					end
+				end
+				util.yield()
+			end
+        end
+    else
+        if data.closestPed then
+			FREEZE_ENTITY_POSITION(data.closestPed, false)
+			STOP_ANIM_TASK(data.closestPed, "misscarsteal2chad_goodbye", "chad_armsaround_girl", 1.0)
+			CLEAR_PED_TASKS(data.closestPed)
+			CLEAR_PED_SECONDARY_TASK(data.closestPed)
+		end
+        CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
+	end
+end)
+--
+
+
+
+--SEXY FUCK--
+local sexList = scenarioList:list("Sexy Fuck")
+
+sexList:toggle("Blowjob Giver - Selected Ped", {}, "", function(on)
+    if on then
+        local offsetPos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(players.user_ped(), -0.06, 0.60, 0)
+        local pedHash = util.joaat(data.pedSceneHash)
+        util.request_model(pedHash)
+        data.pedSceneEntity = entities.create_ped(1, pedHash, offsetPos1, 0)
+        util.yield(1000)
+
+        SET_ENTITY_HEADING(data.pedSceneEntity, GET_ENTITY_HEADING(players.user_ped()) - 180)
+        SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.pedSceneEntity, false)
+        FREEZE_ENTITY_POSITION(data.pedSceneEntity, true)
+        TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedSceneEntity, true)
+        SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedSceneEntity, true)
+
+        loadAnimDict("misscarsteal2pimpsex")
+        TASK_PLAY_ANIM(data.pedSceneEntity, "misscarsteal2pimpsex", "shagloop_pimp", 1.0, 0, -1, 9, 0, false, false, false)
+
+		local offsetPos2 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.pedSceneEntity, -0.06, 0.60, 0)
+		SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos2.x , offsetPos2.y, offsetPos2.z, false, false, false)
+
+        loadAnimDict("misscarsteal2pimpsex")
+		TASK_PLAY_ANIM(players.user_ped(), "misscarsteal2pimpsex", "pimpsex_hooker", 1, 0, -1, 9, 0, false, false, false)
+
+		local time = util.current_time_millis() + 20000
+		while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.pedSceneEntity) do
+            if IS_ENTITY_PLAYING_ANIM(data.pedSceneEntity, "misscarsteal2pimpsex", "shagloop_pimp", 3) then
+				if math.random(1, 100) == 1 then
+					PLAY_PAIN(data.pedSceneEntity, math.random(6, 7), 0, 0)
+				end
+			end
+			util.yield()
+        end
+    else
+        if data.pedSceneEntity then
+            entities.delete_by_handle(data.pedSceneEntity)
+		end
+        CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
+	end
 end)
 
-sexyActionsList:action("Sexy Posing", {}, "", function(on_click)
-    playAnimation("missmic4premiere", "prem_actress_star_a", -1)
+sexList:toggle("Blowjob Giver - Closest Ped", {}, "", function(on)
+    if on then
+        data.closestPed = getClosestPed()
+		if data.closestPed then
+            SET_ENTITY_HEADING(data.closestPed, GET_ENTITY_HEADING(players.user_ped()) - 180)
+            SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.closestPed, false)
+            FREEZE_ENTITY_POSITION(data.closestPed, true)
+            TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.closestPed, true)
+            SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.closestPed, true)
+
+            loadAnimDict("misscarsteal2pimpsex")
+            TASK_PLAY_ANIM(data.closestPed, "misscarsteal2pimpsex", "shagloop_pimp", 1.0, 0, -1, 9, 0, false, false, false)
+
+			local offsetPos = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.closestPed, -0.06, 0.60, 0)
+			SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos.x , offsetPos.y, offsetPos.z, false, false, false)
+
+            loadAnimDict("misscarsteal2pimpsex")
+			TASK_PLAY_ANIM(players.user_ped(), "misscarsteal2pimpsex", "pimpsex_hooker", 1, 0, -1, 9, 0, false, false, false)
+
+			local time = util.current_time_millis() + 20000
+			while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.closestPed) do
+                if IS_ENTITY_PLAYING_ANIM(data.closestPed, "misscarsteal2pimpsex", "shagloop_pimp", 3) then
+					if math.random(1, 100) == 1 then
+						PLAY_PAIN(data.closestPed, math.random(6, 7), 0, 0)
+					end
+				end
+				util.yield()
+			end
+        end
+    else
+        if data.closestPed then
+			FREEZE_ENTITY_POSITION(data.closestPed, false)
+			STOP_ANIM_TASK(data.closestPed, "misscarsteal2chad_goodbye", "chad_armsaround_chad", 1.0)
+			CLEAR_PED_TASKS(data.closestPed)
+			CLEAR_PED_SECONDARY_TASK(data.closestPed)
+		end
+        CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
+	end
 end)
 
-sexyActionsList:action("Sexy Wave", {}, "", function(on_click)
-    playAnimation("missmic4premiere", "prem_4stars_a_aella", -1)
+sexList:toggle("Blowjob Receiver - Selected Ped", {}, "", function(on)
+    if on then
+        local offsetPos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(players.user_ped(), -0.05, 0.60, 0)
+        local pedHash = util.joaat(data.pedSceneHash)
+        util.request_model(pedHash)
+        data.pedSceneEntity = entities.create_ped(1, pedHash, offsetPos1, 0)
+        util.yield(1000)
+
+        SET_ENTITY_HEADING(data.pedSceneEntity, GET_ENTITY_HEADING(players.user_ped()) - 180)
+        SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.pedSceneEntity, false)
+        FREEZE_ENTITY_POSITION(data.pedSceneEntity, true)
+        TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedSceneEntity, true)
+        SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedSceneEntity, true)
+
+        loadAnimDict("misscarsteal2pimpsex")
+        TASK_PLAY_ANIM(data.pedSceneEntity, "misscarsteal2pimpsex", "pimpsex_hooker", 1.0, 0, -1, 9, 0, false, false, false)
+
+		local offsetPos2 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.pedSceneEntity, -0.05, 0.60, 0)
+		SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos2.x , offsetPos2.y, offsetPos2.z, false, false, false)
+
+        loadAnimDict("misscarsteal2pimpsex")
+		TASK_PLAY_ANIM(players.user_ped(), "misscarsteal2pimpsex", "shagloop_pimp", 1, 0, -1, 9, 0, false, false, false)
+
+		local time = util.current_time_millis() + 20000
+		while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.pedSceneEntity) do
+            if IS_ENTITY_PLAYING_ANIM(data.pedSceneEntity, "misscarsteal2pimpsex", "pimpsex_hooker", 3) then
+				if math.random(1, 100) == 1 then
+					PLAY_STREAM_FROM_PED(data.pedSceneEntity, math.random(6, 7), 0, 0)
+				end
+			end
+			util.yield()
+        end
+    else
+        if data.pedSceneEntity then
+            entities.delete_by_handle(data.pedSceneEntity)
+		end
+        CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
+	end
 end)
 
-sexyActionsList:action("Wave", {}, "", function(on_click)
-    playAnimation("random@prisoner_lift", "arms_waving", -1)
+sexList:toggle("Blowjob Receiver - Closest Ped", {}, "", function(on)
+    if on then
+        data.closestPed = getClosestPed()
+		if data.closestPed then
+            SET_ENTITY_HEADING(data.closestPed, GET_ENTITY_HEADING(players.user_ped()) - 180)
+            SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.closestPed, false)
+            FREEZE_ENTITY_POSITION(data.closestPed, true)
+            TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.closestPed, true)
+            SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.closestPed, true)
+
+            loadAnimDict("misscarsteal2pimpsex")
+            TASK_PLAY_ANIM(data.closestPed, "misscarsteal2pimpsex", "pimpsex_hooker", 1.0, 0, -1, 9, 0, false, false, false)
+
+			local offsetPos = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.closestPed, -0.05, 0.60, 0)
+			SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos.x , offsetPos.y, offsetPos.z, false, false, false)
+
+            loadAnimDict("misscarsteal2pimpsex")
+			TASK_PLAY_ANIM(players.user_ped(), "misscarsteal2pimpsex", "shagloop_pimp", 1, 0, -1, 9, 0, false, false, false)
+
+			local time = util.current_time_millis() + 20000
+			while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.closestPed) do
+                if IS_ENTITY_PLAYING_ANIM(data.closestPed, "misscarsteal2pimpsex", "pimpsex_hooker", 3) then
+					if math.random(1, 100) == 1 then
+						PLAY_PAIN(data.closestPed, math.random(6, 7), 0, 0)
+					end
+				end
+				util.yield()
+			end
+        end
+    else
+        if data.closestPed then
+			FREEZE_ENTITY_POSITION(data.closestPed, false)
+			STOP_ANIM_TASK(data.closestPed, "misscarsteal2chad_goodbye", "chad_armsaround_chad", 1.0)
+			CLEAR_PED_TASKS(data.closestPed)
+			CLEAR_PED_SECONDARY_TASK(data.closestPed)
+		end
+        CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
+	end
 end)
 
-local sexyDancesList = animationsList:list("Sexy Dances")
-sexyDancesList:action("Lapdance 1", {}, "", function(on_click)
-    playAnimation("mini@strip_club@private_dance@part1", "priv_dance_p1", -1)
-end)
+sexList:divider("")
 
-sexyDancesList:action("Lapdance 2", {}, "", function(on_click)
-    playAnimation("mini@strip_club@private_dance@part2", "priv_dance_p2", -1)
-end)
-
-sexyDancesList:action("Lapdance 3", {}, "", function(on_click)
-    playAnimation("mini@strip_club@private_dance@part3", "priv_dance_p3", -1)
-end)
-
-sexyDancesList:action("Twerk", {}, "", function(on_click)
-    playAnimation("switch@trevor@mocks_lapdance", "001443_01_trvs_28_idle_stripper", -1)
-end)
-
-local sexyOnFootsList = animationsList:list("Sexy On Foot")
-sexyOnFootsList:action("Sex Giver", {}, "", function(on_click)
-    playAnimation("rcmpaparazzo_2", "shag_loop_a", -1)
-end)
-
-sexyOnFootsList:action("Sex Reciever", {}, "", function(on_click)
-    playAnimation("rcmpaparazzo_2", "shag_loop_poppy", -1)
-end)
-
-sexyOnFootsList:divider("")
-
-sexyOnFootsList:action("Blowjob Giver", {}, "", function(on_click)
-    playAnimationStationary("misscarsteal2pimpsex", "pimpsex_hooker", -1)
-end)
-
-sexyOnFootsList:action("Blowjob Receiver", {}, "", function(on_click)
-    playAnimationStationary("misscarsteal2pimpsex", "shagloop_pimp", -1)
-end)
-
-sexyOnFootsList:divider("")
-
-sexyOnFootsList:action("Masturbation Male (Jerking off)", {}, "", function(on_click)
-    playAnimation("switch@trevor@jerking_off", "trev_jerking_off_loop", -1)
-end)
-
-sexyOnFootsList:action("Masturbation Female (Vibrator)", {}, "", function(on_click)
-    playAnimation("timetable@amanda@ig_6", "ig_6_base", -1)
-end)
-
-local sexyVehicleList = animationsList:list("Sexy Vehicle")
-sexyVehicleList:action("Car blowjob Passenger", {}, "", function(on_click)
-    playAnimation("mini@prostitutes@sexlow_veh", "low_car_bj_loop_female", -1)
-end)
-
-sexyVehicleList:action("Car sex Passenger", {}, "", function(on_click)
-    playAnimation("mini@prostitutes@sexlow_veh", "low_car_sex_loop_female", -1)
-end)
-
-sexyVehicleList:divider("")
-
-sexyVehicleList:action("Car blowjob Driver", {}, "", function(on_click)
-    playAnimation("mini@prostitutes@sexlow_veh", "low_car_bj_loop_player", -1)
-end)
-
-sexyVehicleList:action("Car sex Driver", {}, "", function(on_click)
-    playAnimation("mini@prostitutes@sexlow_veh", "low_car_sex_loop_player", -1)
-end)
-
---RAPE--
-makeAllPedsList(rapeList, function(ped)
-    data.pedRapeHash = ped
-end)
-
-rapeList:toggle("Rape Selected Ped", {}, "", function(on)
+sexList:toggle("Sex Giver - Selected Ped", {}, "", function(on)
     if on then
         local offsetPos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(players.user_ped(), 0, 0.3, 0)
-        local pedHash = util.joaat(data.pedRapeHash)
+        local pedHash = util.joaat(data.pedSceneHash)
         util.request_model(pedHash)
-        data.pedRapeEntity = entities.create_ped(1, pedHash, offsetPos1, 0)
+        data.pedSceneEntity = entities.create_ped(1, pedHash, offsetPos1, 0)
         util.yield(1000)
 
-        SET_ENTITY_HEADING(data.pedRapeEntity, GET_ENTITY_HEADING(players.user_ped()))
-        SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.pedRapeEntity, false)
-        FREEZE_ENTITY_POSITION(data.pedRapeEntity, true)
-        TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedRapeEntity, true)
-        SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedRapeEntity, true)
+        SET_ENTITY_HEADING(data.pedSceneEntity, GET_ENTITY_HEADING(players.user_ped()))
+        SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.pedSceneEntity, false)
+        FREEZE_ENTITY_POSITION(data.pedSceneEntity, true)
+        TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedSceneEntity, true)
+        SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedSceneEntity, true)
 
         loadAnimDict("rcmpaparazzo_2")
-        TASK_PLAY_ANIM(data.pedRapeEntity, "rcmpaparazzo_2", "shag_loop_poppy", 1.0, 0, 20000, 9, 0, false, false, false)
+        TASK_PLAY_ANIM(data.pedSceneEntity, "rcmpaparazzo_2", "shag_loop_poppy", 1.0, 0, -1, 9, 0, false, false, false)
 
-		local offsetPos2 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.pedRapeEntity, 0, -0.3, 0)
+		local offsetPos2 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.pedSceneEntity, 0, -0.3, 0)
 		SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos2.x , offsetPos2.y, offsetPos2.z, false, false, false)
 
         loadAnimDict("rcmpaparazzo_2")
-		TASK_PLAY_ANIM(players.user_ped(), "rcmpaparazzo_2", "shag_loop_a", 1, 0, 20000, 9, 0, false, false, false)
+		TASK_PLAY_ANIM(players.user_ped(), "rcmpaparazzo_2", "shag_loop_a", 1, 0, -1, 9, 0, false, false, false)
 
 		local time = util.current_time_millis() + 20000
-		while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.pedRapeEntity) do
-            if IS_ENTITY_PLAYING_ANIM(data.pedRapeEntity, "rcmpaparazzo_2", "shag_loop_poppy", 3) then
+		while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.pedSceneEntity) do
+            if IS_ENTITY_PLAYING_ANIM(data.pedSceneEntity, "rcmpaparazzo_2", "shag_loop_poppy", 3) then
 				if math.random(1, 100) == 1 then
-					PLAY_PAIN(data.pedRapeEntity, math.random(6, 7), 0, 0)
+					PLAY_PAIN(data.pedSceneEntity, math.random(6, 7), 0, 0)
 				end
 			end
 			util.yield()
         end
     else
-        if data.pedRapeEntity then
-            entities.delete_by_handle(data.pedRapeEntity)
+        if data.pedSceneEntity then
+            entities.delete_by_handle(data.pedSceneEntity)
 		end
         CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
 	end
 end)
 
-rapeList:toggle("Get Raped", {}, "", function(on)
-    if on then
-        local offsetPos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(players.user_ped(), 0, -0.3, 0)
-        local pedHash = util.joaat(data.pedRapeHash)
-        util.request_model(pedHash)
-        data.pedRapeEntity = entities.create_ped(1, pedHash, offsetPos1, 0)
-        util.yield(1000)
-
-        SET_ENTITY_HEADING(data.pedRapeEntity, GET_ENTITY_HEADING(players.user_ped()))
-        SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.pedRapeEntity, false)
-        FREEZE_ENTITY_POSITION(data.pedRapeEntity, true)
-        TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedRapeEntity, true)
-        SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedRapeEntity, true)
-
-        loadAnimDict("rcmpaparazzo_2")
-        TASK_PLAY_ANIM(data.pedRapeEntity, "rcmpaparazzo_2", "shag_loop_a", 1.0, 0, 20000, 9, 0, false, false, false)
-
-		local offsetPos2 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.pedRapeEntity, 0, 0.3, 0)
-		SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos2.x , offsetPos2.y, offsetPos2.z, false, false, false)
-
-        loadAnimDict("rcmpaparazzo_2")
-		TASK_PLAY_ANIM(players.user_ped(), "rcmpaparazzo_2", "shag_loop_poppy", 1, 0, 20000, 9, 0, false, false, false)
-
-		local time = util.current_time_millis() + 20000
-		while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.pedRapeEntity) do
-            if IS_ENTITY_PLAYING_ANIM(data.pedRapeEntity, "rcmpaparazzo_2", "shag_loop_a", 3) then
-				if math.random(1, 100) == 1 then
-					PLAY_PAIN(players.user_ped(), math.random(6, 7), 0, 0)
-				end
-			end
-			util.yield()
-        end
-    else
-        if data.pedRapeEntity then
-            entities.delete_by_handle(data.pedRapeEntity)
-		end
-        CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
-	end
-end)
-
-rapeList:toggle("Rape Closest Ped", {}, "", function(on)
+sexList:toggle("Sex Giver - Closest Ped", {}, "", function(on)
     if on then
         data.closestPed = getClosestPed()
 		if data.closestPed then
@@ -1629,13 +1852,13 @@ rapeList:toggle("Rape Closest Ped", {}, "", function(on)
             SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.closestPed, true)
 
             loadAnimDict("rcmpaparazzo_2")
-            TASK_PLAY_ANIM(data.closestPed, "rcmpaparazzo_2", "shag_loop_poppy", 1.0, 0, 20000, 9, 0, false, false, false)
+            TASK_PLAY_ANIM(data.closestPed, "rcmpaparazzo_2", "shag_loop_poppy", 1.0, 0, -1, 9, 0, false, false, false)
 
 			local offsetPos = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.closestPed, 0, -0.3, 0)
 			SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos.x , offsetPos.y, offsetPos.z, false, false, false)
 
             loadAnimDict("rcmpaparazzo_2")
-			TASK_PLAY_ANIM(players.user_ped(), "rcmpaparazzo_2", "shag_loop_a", 1, 0, 20000, 9, 0, false, false, false)
+			TASK_PLAY_ANIM(players.user_ped(), "rcmpaparazzo_2", "shag_loop_a", 1, 0, -1, 9, 0, false, false, false)
 
 			local time = util.current_time_millis() + 20000
 			while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.closestPed) do
@@ -1658,6 +1881,186 @@ rapeList:toggle("Rape Closest Ped", {}, "", function(on)
 	end
 end)
 
+sexList:toggle("Sex Receiver - Selected Ped", {}, "", function(on)
+    if on then
+        local offsetPos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(players.user_ped(), 0, -0.3, 0)
+        local pedHash = util.joaat(data.pedSceneHash)
+        util.request_model(pedHash)
+        data.pedSceneEntity = entities.create_ped(1, pedHash, offsetPos1, 0)
+        util.yield(1000)
+
+        SET_ENTITY_HEADING(data.pedSceneEntity, GET_ENTITY_HEADING(players.user_ped()))
+        SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.pedSceneEntity, false)
+        FREEZE_ENTITY_POSITION(data.pedSceneEntity, true)
+        TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedSceneEntity, true)
+        SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.pedSceneEntity, true)
+
+        loadAnimDict("rcmpaparazzo_2")
+        TASK_PLAY_ANIM(data.pedSceneEntity, "rcmpaparazzo_2", "shag_loop_a", 1.0, 0, -1, 9, 0, false, false, false)
+
+		local offsetPos2 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.pedSceneEntity, 0, 0.3, 0)
+		SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos2.x , offsetPos2.y, offsetPos2.z, false, false, false)
+
+        loadAnimDict("rcmpaparazzo_2")
+		TASK_PLAY_ANIM(players.user_ped(), "rcmpaparazzo_2", "shag_loop_poppy", 1, 0, -1, 9, 0, false, false, false)
+
+		local time = util.current_time_millis() + 20000
+		while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.pedSceneEntity) do
+            if IS_ENTITY_PLAYING_ANIM(data.pedSceneEntity, "rcmpaparazzo_2", "shag_loop_a", 3) then
+				if math.random(1, 100) == 1 then
+					PLAY_PAIN(players.user_ped(), math.random(6, 7), 0, 0)
+				end
+			end
+			util.yield()
+        end
+    else
+        if data.pedSceneEntity then
+            entities.delete_by_handle(data.pedSceneEntity)
+		end
+        CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
+	end
+end)
+
+sexList:toggle("Sex Receiver - Closest Ped", {}, "", function(on)
+    if on then
+        data.closestPed = getClosestPed()
+		if data.closestPed then
+            SET_ENTITY_HEADING(data.closestPed, GET_ENTITY_HEADING(players.user_ped()))
+            SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), data.closestPed, false)
+            FREEZE_ENTITY_POSITION(data.closestPed, true)
+            TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.closestPed, true)
+            SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(data.closestPed, true)
+
+            loadAnimDict("rcmpaparazzo_2")
+            TASK_PLAY_ANIM(data.closestPed, "rcmpaparazzo_2", "shag_loop_a", 1.0, 0, -1, 9, 0, false, false, false)
+
+			local offsetPos = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(data.closestPed, 0, 0.3, 0)
+			SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), offsetPos.x , offsetPos.y, offsetPos.z, false, false, false)
+
+            loadAnimDict("rcmpaparazzo_2")
+			TASK_PLAY_ANIM(players.user_ped(), "rcmpaparazzo_2", "shag_loop_poppy", 1, 0, -1, 9, 0, false, false, false)
+
+			local time = util.current_time_millis() + 20000
+			while time > util.current_time_millis() and not IS_ENTITY_DEAD(players.user_ped()) and not IS_ENTITY_DEAD(data.closestPed) do
+                if IS_ENTITY_PLAYING_ANIM(data.closestPed, "rcmpaparazzo_2", "shag_loop_a", 3) then
+					if math.random(1, 100) == 1 then
+						PLAY_PAIN(data.closestPed, math.random(6, 7), 0, 0)
+					end
+				end
+				util.yield()
+			end
+        end
+    else
+        if data.closestPed then
+			FREEZE_ENTITY_POSITION(data.closestPed, false)
+			STOP_ANIM_TASK(data.closestPed, "rcmpaparazzo_2", "shag_loop_a", 1.0)
+			CLEAR_PED_TASKS(data.closestPed)
+			CLEAR_PED_SECONDARY_TASK(data.closestPed)
+		end
+        CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
+	end
+end)
+--
+
+
+
+--ANIMATIONS--
+local sexyActionsList = animationsList:list("Sexy Actions")
+
+sexyActionsList:action("Send a Kiss", {}, "", function(on_click)
+    playAnimation("mini@hookers_spvanilla", "idle_a", -1)
+end)
+
+sexyActionsList:action("Sexy Idle", {}, "", function(on_click)
+    playAnimation("move_f@sexy@a", "idle", -1)
+end)
+
+sexyActionsList:action("Sexy Posing", {}, "", function(on_click)
+    playAnimation("missmic4premiere", "prem_actress_star_a", -1)
+end)
+
+sexyActionsList:action("Sexy Wave", {}, "", function(on_click)
+    playAnimation("missmic4premiere", "prem_4stars_a_aella", -1)
+end)
+
+sexyActionsList:action("Wave", {}, "", function(on_click)
+    playAnimation("random@prisoner_lift", "arms_waving", -1)
+end)
+--
+
+
+
+--
+local sexyDancesList = animationsList:list("Sexy Dances")
+
+sexyDancesList:action("Lapdance 1", {}, "", function(on_click)
+    playAnimation("mini@strip_club@private_dance@part1", "priv_dance_p1", -1)
+end)
+
+sexyDancesList:action("Lapdance 2", {}, "", function(on_click)
+    playAnimation("mini@strip_club@private_dance@part2", "priv_dance_p2", -1)
+end)
+
+sexyDancesList:action("Lapdance 3", {}, "", function(on_click)
+    playAnimation("mini@strip_club@private_dance@part3", "priv_dance_p3", -1)
+end)
+
+sexyDancesList:action("Twerk", {}, "", function(on_click)
+    playAnimation("switch@trevor@mocks_lapdance", "001443_01_trvs_28_idle_stripper", -1)
+end)
+--
+
+
+--
+local sexyOnFootsList = animationsList:list("Sexy Stuff")
+
+sexyOnFootsList:action("Masturbation Male (Jerking off)", {}, "", function(on_click)
+    playAnimation("switch@trevor@jerking_off", "trev_jerking_off_loop", -1)
+end)
+
+sexyOnFootsList:action("Masturbation Female (Vibrator)", {}, "", function(on_click)
+    playAnimation("timetable@amanda@ig_6", "ig_6_base", -1)
+end)
+--
+
+
+
+--
+local sexyVehicleList = animationsList:list("Vehicle Sex")
+
+sexyVehicleList:action("Car blowjob Passenger", {}, "", function(on_click)
+    playAnimation("mini@prostitutes@sexlow_veh", "low_car_bj_loop_female", -1)
+end)
+
+sexyVehicleList:action("Car sex Passenger", {}, "", function(on_click)
+    playAnimation("mini@prostitutes@sexlow_veh", "low_car_sex_loop_female", -1)
+end)
+
+sexyVehicleList:divider("")
+
+sexyVehicleList:action("Car blowjob Driver", {}, "", function(on_click)
+    playAnimation("mini@prostitutes@sexlow_veh", "low_car_bj_loop_player", -1)
+end)
+
+sexyVehicleList:action("Car sex Driver", {}, "", function(on_click)
+    playAnimation("mini@prostitutes@sexlow_veh", "low_car_sex_loop_player", -1)
+end)
+
+animationsList:divider("")
+
+animationsList:action("Force Stop Animations", {}, "", function()
+    CLEAR_PED_TASKS_IMMEDIATELY(players.user_ped()) 
+end)
+
+animationsList:action("Stop Animation", {}, "", function()
+    CLEAR_PED_TASKS(players.user_ped())
+    CLEAR_PED_SECONDARY_TASK(players.user_ped())
+end)
+--
+
+
+
+--
 util.create_tick_handler(function()
     if data.isFocusedOnPed then
         if data.createdPed then
@@ -1676,3 +2079,8 @@ util.create_tick_handler(function()
         end
     end
 end)
+
+
+
+
+
